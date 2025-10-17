@@ -33,7 +33,7 @@ const validate = (schema) =>
                         field: err.path.join("."),
                         message: err.message,
                     }))
-                    : [{ field: "unknown", message: error.message }];
+                    : [{ field:error.message , message: error.message }];
 
                 throw new ApiError(400, "Validation failed", formattedErrors);
             }

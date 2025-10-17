@@ -6,6 +6,8 @@ import { errorHandler } from "./src/core/middleware/errorHandler.js";
 import authRouter from "./src/modules/auth/auth.route.js";
 import userRouter from "./src/modules/user/user.route.js";
 import adminRouter from "./src/modules/admin/admin.route.js";
+import storeRouter from "./src/modules/store/store.route.js";   
+import adminActionRouter from "./src/modules/admin/adminAction.route.js";
 const app = express()
 
 dotenv.config()
@@ -19,6 +21,9 @@ app.use("/api/v1/auth", authRouter)
 
 app.use("/api/v1/users", userRouter)
 app.use("/api/v1/admin", adminRouter)
+
+app.use("/api/v1/store", storeRouter);
+app.use("/api/v1/admin/actions", adminActionRouter);
 
 app.get('/health', (req, res) => {
     res.status(200).json({

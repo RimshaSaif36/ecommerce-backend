@@ -8,7 +8,7 @@ import {
     forgotAdminPasswordMail,
     resetAdminPassword
 } from "../../modules/admin/admin.controller.js";
-import { isLoggedIn } from "../../core/middleware/isLoggedIn.js"; // middleware to check auth
+import { isLoggedIn } from "../../core/middleware/isLoggedIn.js";
 import { validate } from "../../core/middleware/validate.js";
 import { registerAdminSchema, loginAdminSchema, resetPasswordSchema} from "../../shared/validators/admin.validation.js";
 

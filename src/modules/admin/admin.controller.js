@@ -42,8 +42,51 @@ const registerAdmin = asyncHandler(async (req, res) => {
         new ApiResponse(201, { adminName, adminEmail, adminRole }, "Admin registered successfully")
     );
 });
-
 // ------------------- LOGIN ADMIN -------------------
+// const loginAdmin = asyncHandler(async (req, res) => {
+//   const { adminEmail, adminPassword } = req.body;
+
+//   const admin = await adminUser.findOne({ adminEmail });
+//   if (!admin) throw new ApiError(400, "Admin not found");
+
+//   const isPasswordCorrect = await admin.isPasswordCorrect(adminPassword);
+//   if (!isPasswordCorrect) throw new ApiError(400, "Invalid password");
+
+//   if (!admin.adminIsVerified) throw new ApiError(400, "Admin not verified");
+
+//   // Generate tokens
+//   const accessToken = admin.generateAccessToken();
+//   const refreshToken = admin.generateRefreshToken();
+
+//   // 🟢 Store cookies with "admin" context
+//   await storeLoginCookies(res, accessToken, refreshToken, "admin");
+
+//   admin.refreshToken = refreshToken;
+//   await admin.save();
+
+//   // 🟢 Dynamic role-based token key (e.g. super_admin_accessToken)
+//   const roleKey = admin.adminRole.replace(/-/g, "_");
+
+//   return res.status(200).json(
+//     new ApiResponse(
+//       200,
+//       {
+//         admin: {
+//           adminName: admin.adminName,
+//           adminEmail: admin.adminEmail,
+//           adminRole: admin.adminRole,
+//         },
+//         tokens: {
+//           [`${roleKey}_accessToken`]: accessToken,
+//           [`${roleKey}_refreshToken`]: refreshToken,
+//         },
+//       },
+//       `${admin.adminRole} logged in successfully`
+//     )
+//   );
+// });
+
+
 const loginAdmin = asyncHandler(async (req, res) => {
     const { adminEmail, adminPassword } = req.body;
     const admin = await adminUser.findOne({ adminEmail });
@@ -56,7 +99,7 @@ const loginAdmin = asyncHandler(async (req, res) => {
     const accessToken = admin.generateAccessToken();
     const refreshToken = admin.generateRefreshToken();
 
-    storeLoginCookies(res, accessToken, refreshToken);
+    storeLoginCookies(res, accessToken, refreshToken, "admin");
     admin.refreshToken = refreshToken;
     await admin.save();
 
@@ -68,6 +111,8 @@ const loginAdmin = asyncHandler(async (req, res) => {
 // ------------------- LOGOUT ADMIN -------------------
 const logoutAdmin = asyncHandler(async (req, res) => {
     const adminId = req.user?._id;
+    console.log(req.user);
+    
     if (!adminId) throw new ApiError(401, "Admin not authenticated");
 
     const admin = await adminUser.findById(adminId);
@@ -105,16 +150,26 @@ const verifyAdminMail = asyncHandler(async (req, res) => {
 
 // ------------------- GET NEW ACCESS TOKEN -------------------
 const getAdminAccessToken = asyncHandler(async (req, res) => {
-    const { refreshToken } = req.cookies;
-    if (!refreshToken) throw new ApiError(400, "Refresh token not found");
+    const { adminRefreshToken } = req.cookies; // ✅ updated cookie name
+    if (!adminRefreshToken) throw new ApiError(400, "Refresh token not found");
 
-    const admin = await adminUser.findOne({ refreshToken });
+    const admin = await adminUser.findOne({ refreshToken: adminRefreshToken });
     if (!admin) throw new ApiError(400, "Invalid refresh token");
 
     const accessToken = admin.generateAccessToken();
-    storeAccessToken(res, accessToken);
 
-    return res.status(201).json(new ApiResponse(201, { accessToken }, "Access token generated successfully"));
+    // ✅ Pass "admin" role for proper cookie naming
+    await storeAccessToken(res, accessToken, "admin");
+
+    return res
+        .status(201)
+        .json(
+            new ApiResponse(
+                201,
+                { accessToken },
+                "Admin access token generated successfully"
+            )
+        );
 });
 
 // ------------------- FORGOT PASSWORD -------------------

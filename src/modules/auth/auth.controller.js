@@ -65,6 +65,51 @@ const registerUser = asyncHandler(async (req, res) => {
 
 })
 
+// const logInUser = asyncHandler(async (req, res) => {
+//   const { userEmail, userPassword } = req.body;
+
+//   const user = await User.findOne({ userEmail });
+//   if (!user) throw new ApiError(400, "User not found");
+
+//   const isPasswordCorrect = await user.isPasswordCorrect(userPassword);
+//   if (!isPasswordCorrect) throw new ApiError(400, "Invalid password");
+
+//   if (!user.userIsVerified) throw new ApiError(400, "User not verified");
+
+//   // Generate tokens
+//   const accessToken = user.generateAccessToken();
+//   const refreshToken = user.generateRefreshToken();
+
+//   // 🟢 Store cookies with "user" role context
+//   await storeLoginCookies(res, accessToken, refreshToken, "user");
+
+//   user.userRefreshToken = refreshToken;
+//   await user.save();
+
+//   // 🟢 Dynamic role-based keys (e.g. buyer_accessToken)
+//   const roleKey = user.userRole.replace(/-/g, "_");
+
+//   return res.status(200).json(
+//     new ApiResponse(
+//       200,
+//       {
+//         user: {
+//           userName: user.userName,
+//           userEmail: user.userEmail,
+//           userRole: user.userRole,
+//           phoneNumber: user.phoneNumber,
+//         },
+//         tokens: {
+//           [`${roleKey}_accessToken`]: accessToken,
+//           [`${roleKey}_refreshToken`]: refreshToken,
+//         },
+//       },
+//       `${user.userRole} logged in successfully`
+//     )
+//   );
+// });
+
+
 const logInUser = asyncHandler(async (req, res) => {
 
     const { userEmail, userPassword } = req.body
@@ -85,7 +130,7 @@ const logInUser = asyncHandler(async (req, res) => {
     const accessToken = await user.generateAccessToken();
     const refreshToken = await user.generateRefreshToken();
 
-    storeLoginCookies(res, accessToken, refreshToken)
+    storeLoginCookies(res, accessToken, refreshToken, "user");
 
     user.userRefreshToken = refreshToken
     await user.save()
@@ -175,21 +220,16 @@ const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
 })
 
 const getAccessToken = asyncHandler(async (req, res) => {
-    const { refreshToken } = req.cookies
-    if (!refreshToken) {
-        throw new ApiError(400, "Refresh token not found")
-    }
+    const { userRefreshToken } = req.cookies; // ✅ updated cookie name
+    if (!userRefreshToken) throw new ApiError(400, "Refresh token not found");
 
-    const user = await User.findOne({ userRefreshToken: refreshToken })
-    if (!user) {
-        throw new ApiError(400, "Invalid refresh token");
-    }
+    const user = await User.findOne({ userRefreshToken });
+    if (!user) throw new ApiError(400, "Invalid refresh token");
 
     const accessToken = await user.generateAccessToken();
 
-
-
-    storeAccessToken(res, accessToken)
+    // ✅ Pass "user" role for correct cookie key
+    await storeAccessToken(res, accessToken, "user");
 
     return res
         .status(201)
@@ -197,10 +237,11 @@ const getAccessToken = asyncHandler(async (req, res) => {
             new ApiResponse(
                 201,
                 { accessToken },
-                "Access token generated successfully"
+                "User access token generated successfully"
             )
         );
-})
+});
+
 
 const forgotPasswordMail = asyncHandler(async (req, res) => {
     const { userEmail } = req.body;
