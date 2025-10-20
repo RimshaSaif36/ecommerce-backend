@@ -6,8 +6,8 @@ import {
   rejectStore,
   suspendStore,
   blockStore,
-//   verifyProduct,
-//   rejectProduct,
+  verifyProduct,
+  rejectProduct,
 } from "./adminAction.controller.js";
 import { authorizeRoles } from "../../core/middleware/authorizeRoles.js";
 
@@ -22,7 +22,7 @@ adminActionRouter.post("/store/:id/suspend",isLoggedIn,authorizeRoles("super-adm
 adminActionRouter.post("/store/:id/block",isLoggedIn,authorizeRoles("super-admin")  , blockStore);
 
 // Product actions
-// adminActionRouter.post("/product/:id/verify", verifyProduct)
-// adminActionRouter.post("/product/:id/reject", rejectProduct);
+adminActionRouter.post("/product/:id/verify", isLoggedIn,authorizeRoles("super-admin"), verifyProduct);
+adminActionRouter.post("/product/:id/reject", isLoggedIn,authorizeRoles("super-admin"), rejectProduct);
 
 export default adminActionRouter;

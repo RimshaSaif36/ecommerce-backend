@@ -26,11 +26,10 @@ const storeSchema = new mongoose.Schema(
       default: "",
     },
     storeCategoryId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Categories",
-      default: null,
-      required: false,
-    },
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Category", // ✅ matches the model name exactly
+    default: null,
+  },
     idCardNumber: {
       type: String,
       maxlength: 13,

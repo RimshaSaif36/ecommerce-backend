@@ -3,48 +3,38 @@ import { asyncHandler } from "../utils/async-handler.js";
 import { ZodError } from "zod";
 
 const validate = (schema) =>
-    asyncHandler(async (req, res, next) => {
-        try {
-            // 🧩 Single schema (body only)
-            if (schema?.safeParse) {
-                schema.parse(req.body);
-            } else {
-                // 🧩 Multiple schema keys (body, query, params)
-                if (schema?.body) schema.body.parse(req.body);
-                if (schema?.query) schema.query.parse(req.query);
-                if (schema?.params) schema.params.parse(req.params);
-            }
+  asyncHandler(async (req, res, next) => {
+    try {
+      // 🧩 Handle single or multiple schema validation
+      if (schema?.safeParse) {
 
-            next();
-        } catch (error) {
-            // 🧾 Handle Zod validation errors cleanly
-            // if (error instanceof ZodError) {
-            //     const formattedErrors = (error.errors || []).map((err) => ({
-            //         field: err.path.join("."),
-            //         message: err.message,
-            //     }));
+        schema.parse(req.body);
+      } else {
+        if (schema?.body) schema.body.parse(req.body);
+        if (schema?.query) schema.query.parse(req.query);
+        if (schema?.params) schema.params.parse(req.params);
+      }
 
-            //     // ❌ Throw ApiError to keep consistent format
-            //     throw new ApiError(400, "Validation failed", formattedErrors);
-            // }
-            if (error instanceof ZodError) {
-                const formattedErrors = Array.isArray(error.errors)
-                    ? error.errors.map((err) => ({
-                        field: err.path.join("."),
-                        message: err.message,
-                    }))
-                    : [{ field:error.message , message: error.message }];
+      next();
+    } catch (error) {
+      if (error instanceof ZodError) {
+        // ✅ Handle both .issues and .errors arrays safely
+        const zodErrors = error.issues || error.errors || [];
 
-                throw new ApiError(400, "Validation failed", formattedErrors);
-            }
+        const formattedErrors = zodErrors.map((err) => ({
+          field: err?.path?.join(".") || "unknown",
+          message: err?.message || "Invalid input",
+        }));
 
+        throw new ApiError(400, "Validation failed", formattedErrors);
+      }
 
-            // 🔥 Unexpected error (schema not Zod, etc.)
-            console.error("Unexpected validation error:", error);
-            throw new ApiError(500, "Unexpected validation error", [
-                { message: error.message },
-            ]);
-        }
-    });
+      // 🔥 Unexpected validation errors
+      console.error("Unexpected validation error:", error);
+      throw new ApiError(500, "Unexpected validation error", [
+        { message: error.message },
+      ]);
+    }
+  });
 
 export { validate };

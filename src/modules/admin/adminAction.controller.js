@@ -1,5 +1,5 @@
 import Store from "../../models/Store.model.js";
-// import StoreProduct from "../../models/StoreProduct.model.js";
+import StoreProduct from "../../models/StoreProduct.model.js";
 // import Factory from "../../models/Factory.model.js";
 // import FactoryProduct from "../../models/FactoryProduct.model.js";
 import AdminActions from "../../models/adminAction.model.js";
@@ -84,38 +84,38 @@ export const blockStore = asyncHandler(async (req, res) => {
 });
 
 // ---------- PRODUCT ACTIONS ----------
-// export const verifyProduct = asyncHandler(async (req, res) => {
-//   const product = await StoreProduct.findById(req.params.id);
-//   if (!product) return res.status(404).json({ message: "Product not found" });
+export const verifyProduct = asyncHandler(async (req, res) => {
+  const product = await StoreProduct.findById(req.params.id);
+  if (!product) return res.status(404).json({ message: "Product not found" });
 
-//   product.productStatus = "live";
-//   await product.save();
+  product.productStatus = "live";
+  await product.save();
 
-//   await logAdminAction({
-//     adminId: req.user._id,
-//     actionType: "VerifyProduct",
-//     targetTable: "StoreProduct",
-//     targetId: product._id,
-//     notes: req.body.notes || "Product verified",
-//   });
+  await logAdminAction({
+    adminId: req.user._id,
+    actionType: "VerifyProduct",
+    targetTable: "StoreProduct",
+    targetId: product._id,
+    notes: req.body.notes || "Product verified",
+  });
 
-//   res.status(200).json({ success: true, message: "Product verified successfully" });
-// });
+  res.status(200).json({ success: true, message: "Product verified successfully" });
+});
 
-// export const rejectProduct = asyncHandler(async (req, res) => {
-//   const product = await StoreProduct.findById(req.params.id);
-//   if (!product) return res.status(404).json({ message: "Product not found" });
+export const rejectProduct = asyncHandler(async (req, res) => {
+  const product = await StoreProduct.findById(req.params.id);
+  if (!product) return res.status(404).json({ message: "Product not found" });
 
-//   product.productStatus = "rejected";
-//   await product.save();
+  product.productStatus = "rejected";
+  await product.save();
 
-//   await logAdminAction({
-//     adminId: req.user._id,
-//     actionType: "RejectProduct",
-//     targetTable: "StoreProduct",
-//     targetId: product._id,
-//     notes: req.body.notes || "Product rejected",
-//   });
+  await logAdminAction({
+    adminId: req.user._id,
+    actionType: "RejectProduct",
+    targetTable: "StoreProduct",
+    targetId: product._id,
+    notes: req.body.notes || "Product rejected",
+  });
 
-//   res.status(200).json({ success: true, message: "Product rejected successfully" });
-// });
+  res.status(200).json({ success: true, message: "Product rejected successfully" });
+});

@@ -1,20 +1,23 @@
-
 import { ApiError } from "../utils/api-error.js";
 
 export const errorHandler = (err, req, res, next) => {
-    if (err instanceof ApiError) {
-        return res.status(err.statusCode).json({
-            success: false,
-            message: err.message,
-            errors: err.errors,
-            stack: process.env.NODE_ENV === "development" ? err.stack : undefined,
-        });
-    }
+  console.error("🔥 Error caught by middleware:", err);
 
-    // Fallback for unhandled errors
-    return res.status(500).json({
-        success: false,
-        message: "Internal Server Error",
-        stack: process.env.NODE_ENV === "development" ? err.stack : undefined,
+  // known custom error
+  if (err instanceof ApiError) {
+    return res.status(err.statusCode).json({
+      success: false,
+      message: err.message,
+      errors: err.errors || [],
+      stack: process.env.NODE_ENV === "development" ? err.stack : undefined,
     });
+  }
+
+  // fallback for unknown errors
+  return res.status(500).json({
+    success: false,
+    message: "Internal Server Error",
+    errors: [{ message: err.message }],
+    stack: process.env.NODE_ENV === "development" ? err.stack : undefined,
+  });
 };

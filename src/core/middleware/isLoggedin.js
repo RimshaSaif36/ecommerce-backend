@@ -22,7 +22,7 @@ const isLoggedIn = asyncHandler(async (req, res, next) => {
     req.user = decodedAccessToken;
 
     // Optional: also tag whether it's an admin or user token
-    req.userRole = req.cookies.adminAccessToken ? "admin" : "user";
+    // req.userRole = req.cookies.adminAccessToken ? "admin" : "user";
 
     next();
   } catch (error) {
