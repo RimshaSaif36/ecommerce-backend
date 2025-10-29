@@ -1,17 +1,29 @@
 import express from "express";
+import { upload } from "../../core/middleware/multer.js";
 import { isLoggedIn } from "../../core/middleware/isLoggedIn.js";
 import { authorizeRoles } from "../../core/middleware/authorizeRoles.js";
-import { createStore, getStoreDetails, updateStore, deleteStore,getAllStores } from "./store.controller.js";
 import { validate } from "../../core/middleware/validate.js";
-import { createStoreSchema,updateStoreSchema } from "../../shared/validators/store.validation.js";
+import { createStoreSchema, updateStoreSchema } from "../../shared/validators/store.validation.js";
+import { createStore, getStoreDetails, updateStore, deleteStore, getAllStores } from "./store.controller.js";
 
-const storeRouter = express.Router();
+const router = express.Router();
 
-// All routes protected, only store-admin can access
-storeRouter.post("/createStore", isLoggedIn, authorizeRoles("store-admin"),  validate(createStoreSchema),createStore);
-storeRouter.get("/getStore", isLoggedIn, authorizeRoles("store-admin"), getStoreDetails);
-storeRouter.put("/updateStore", isLoggedIn, authorizeRoles("store-admin"),validate(updateStoreSchema), updateStore);
-storeRouter.delete("/deleteStore", isLoggedIn, authorizeRoles("store-admin"), deleteStore);
-storeRouter.get("/getAllStores", isLoggedIn, authorizeRoles("super-admin"), getAllStores);
+// Routes
+router.post("/createStore", isLoggedIn, authorizeRoles("store-admin"), upload.fields([
+  { name: "storeLogo", maxCount: 1 },
+  { name: "storeCoverImage", maxCount: 1 },
+  { name: "idCardImage", maxCount: 1 },
+]), validate(createStoreSchema), createStore);
 
-export default storeRouter;
+router.get("/getStore", isLoggedIn, authorizeRoles("store-admin"), getStoreDetails);
+
+router.put("/updateStore", isLoggedIn, authorizeRoles("store-admin"), upload.fields([
+  { name: "storeLogo", maxCount: 1 },
+  { name: "storeCoverImage", maxCount: 1 },
+]), validate(updateStoreSchema), updateStore);
+
+router.delete("/deleteStore", isLoggedIn, authorizeRoles("store-admin"), deleteStore);
+
+router.get("/getAllStores", isLoggedIn, authorizeRoles("super-admin"), getAllStores);
+
+export default router;

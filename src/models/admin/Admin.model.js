@@ -4,7 +4,7 @@ import crypto from "crypto";
 import jwt from "jsonwebtoken";
 const adminUserSchema = new mongoose.Schema(
     {
-        profileImage: {
+        adminProfileImage: {
             type: String,
             default: 'https://placehold.co/600x400?text=User+Image',
         },

@@ -7,12 +7,33 @@ import {
   getStoreCategories,
   getFactoryCategories, 
 } from "./category.controller.js";
+import { authorizeRoles } from "../../core/middleware/authorizeRoles.js";
+import { isLoggedIn } from "../../core/middleware/isLoggedIn.js";
 
 const categoryRouter = express.Router();
 
-categoryRouter.post("/createCategory", validate(storeCategorySchema), createCategory);
-categoryRouter.get("/getallcategories", getAllCategories);
-categoryRouter.get("/storecategory", getStoreCategories);
-categoryRouter.get("/factorycategory", getFactoryCategories);
+categoryRouter.post("/createCategory", isLoggedIn, authorizeRoles("super-admin"), validate(storeCategorySchema), createCategory);
+categoryRouter.get("/getallcategories", isLoggedIn,getAllCategories);
+categoryRouter.get("/storecategory", isLoggedIn,getStoreCategories);
+categoryRouter.get("/factorycategory",isLoggedIn, getFactoryCategories);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 export default categoryRouter;

@@ -1,15 +1,21 @@
 import { asyncHandler } from "../../core/utils/async-handler.js";
 import { ApiError } from "../../core/utils/api-error.js";
 import { ApiResponse } from "../../core/utils/api-response.js";
-import { StoreProductFeedback } from "../../models/StoreProductFeedback.model.js";
+import { StoreProductFeedback } from "../../models/store/StoreProductFeedback.model.js";
 import { storeProductFeedbackValidation } from "../../shared/validators/store.validation.js";
-import StoreProduct  from "../../models/StoreProduct.model.js";
+import StoreProduct from "../../models/store/StoreProduct.model.js";
+import S3UploadHelper from "../../shared/helpers/s3Upload.js";
 
-// CREATE
+/* =============================
+   ✅ CREATE FEEDBACK (BUYER ONLY)
+============================= */
 export const createProductFeedback = asyncHandler(async (req, res) => {
   if (!req.user) throw new ApiError(401, "Unauthorized");
 
-  // Validate only user input
+  // Only buyers can create feedback
+  if (req.user.userRole !== "buyer") throw new ApiError(403, "Only buyers can create feedback");
+
+  // Validate user input
   const data = storeProductFeedbackValidation.parse(req.body);
 
   // Assign logged-in user
@@ -19,40 +25,91 @@ export const createProductFeedback = asyncHandler(async (req, res) => {
   const product = await StoreProduct.findById(data.storeProductId);
   if (!product) throw new ApiError(404, "Product not found");
 
-  // Assign storeId from product
   data.storeId = product.storeId;
 
-  // Now create feedback
-  const feedback = await StoreProductFeedback.create(data);
+  // Handle optional image upload
+  if (req.file) {
+    const uploaded = await S3UploadHelper.uploadFile(req.file, "product-feedback-images");
+    data.storeProductImage = uploaded.key;
+  }
 
-  return res
-    .status(201)
-    .json(new ApiResponse(201, feedback, "Product feedback created successfully"));
+  const feedback = await StoreProductFeedback.create(data);
+  const feedbackObj = feedback.toObject();
+
+  // Generate signed URL for image
+  if (feedbackObj.storeProductImage) {
+    feedbackObj.storeProductImageUrl = await S3UploadHelper.getSignedUrl(feedbackObj.storeProductImage);
+  }
+
+  res.status(201).json(new ApiResponse(201, feedbackObj, "Product feedback created successfully"));
 });
-// READ ALL
+
+/* =============================
+   ✅ GET ALL FEEDBACKS
+============================= */
 export const getAllProductFeedback = asyncHandler(async (req, res) => {
   const feedbacks = await StoreProductFeedback.find();
-  return res.status(200).json(new ApiResponse(200, feedbacks, "All product feedbacks fetched successfully"));
+  const feedbacksWithUrls = await Promise.all(
+    feedbacks.map(async (f) => {
+      const obj = f.toObject();
+      if (obj.storeProductImage) obj.storeProductImageUrl = await S3UploadHelper.getSignedUrl(obj.storeProductImage);
+      return obj;
+    })
+  );
+  return res.status(200).json(new ApiResponse(200, feedbacksWithUrls, "All product feedbacks fetched successfully"));
 });
 
-// READ SINGLE
+/* =============================
+   ✅ GET SINGLE FEEDBACK
+============================= */
 export const getProductFeedbackById = asyncHandler(async (req, res) => {
   const feedback = await StoreProductFeedback.findById(req.params.id);
   if (!feedback) throw new ApiError(404, "Product feedback not found");
-  return res.status(200).json(new ApiResponse(200, feedback, "Product feedback fetched successfully"));
+
+  const feedbackObj = feedback.toObject();
+  if (feedbackObj.storeProductImage) feedbackObj.storeProductImageUrl = await S3UploadHelper.getSignedUrl(feedbackObj.storeProductImage);
+
+  return res.status(200).json(new ApiResponse(200, feedbackObj, "Product feedback fetched successfully"));
 });
 
-// UPDATE
+/* =============================
+   ✅ UPDATE FEEDBACK (OWNER ONLY)
+============================= */
 export const updateProductFeedback = asyncHandler(async (req, res) => {
+  const feedback = await StoreProductFeedback.findById(req.params.id);
+  if (!feedback) throw new ApiError(404, "Product feedback not found");
+
+  // Only owner can update
+  if (feedback.userId.toString() !== req.user._id.toString()) throw new ApiError(403, "Not authorized");
+
   const data = storeProductFeedbackValidation.partial().parse(req.body);
+
+  // Handle optional image upload
+  if (req.file) {
+    if (feedback.storeProductImage) await S3UploadHelper.deleteFile(feedback.storeProductImage);
+    const uploaded = await S3UploadHelper.uploadFile(req.file, "product-feedback-images");
+    data.storeProductImage = uploaded.key;
+  }
+
   const updatedFeedback = await StoreProductFeedback.findByIdAndUpdate(req.params.id, data, { new: true });
-  if (!updatedFeedback) throw new ApiError(404, "Product feedback not found");
-  return res.status(200).json(new ApiResponse(200, updatedFeedback, "Product feedback updated successfully"));
+  const feedbackObj = updatedFeedback.toObject();
+  if (feedbackObj.storeProductImage) feedbackObj.storeProductImageUrl = await S3UploadHelper.getSignedUrl(feedbackObj.storeProductImage);
+
+  return res.status(200).json(new ApiResponse(200, feedbackObj, "Product feedback updated successfully"));
 });
 
-// DELETE
+/* =============================
+   ✅ DELETE FEEDBACK (OWNER ONLY)
+============================= */
 export const deleteProductFeedback = asyncHandler(async (req, res) => {
-  const deletedFeedback = await StoreProductFeedback.findByIdAndDelete(req.params.id);
-  if (!deletedFeedback) throw new ApiError(404, "Product feedback not found");
+  const feedback = await StoreProductFeedback.findById(req.params.id);
+  if (!feedback) throw new ApiError(404, "Product feedback not found");
+
+  // Only owner can delete
+  if (feedback.userId.toString() !== req.user._id.toString()) throw new ApiError(403, "Not authorized");
+
+  if (feedback.storeProductImage) await S3UploadHelper.deleteFile(feedback.storeProductImage);
+  await StoreProductFeedback.deleteOne({ _id: req.params.id });
+
   return res.status(200).json(new ApiResponse(200, {}, "Product feedback deleted successfully"));
 });

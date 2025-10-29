@@ -33,3 +33,14 @@ const resetPasswordSchema = z.object({
 });
 
 export { registerSchema, loginSchema, resetPasswordSchema };
+
+
+export const updateUserSchema = z.object({
+  userName: z.string().min(2, "Username must be at least 2 characters").optional(),
+  userEmail: z.string().email("Invalid email").optional(),
+  phoneNumber: z
+    .string()
+    .regex(/^[0-9]{10,15}$/, "Phone number must be 10-15 digits")
+    .optional(),
+  userAddress: z.string().min(5, "Address must be at least 5 characters").optional(),
+});

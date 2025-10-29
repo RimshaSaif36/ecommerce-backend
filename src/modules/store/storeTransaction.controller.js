@@ -1,9 +1,9 @@
 import { asyncHandler } from "../../core/utils/async-handler.js";
 import { ApiError } from "../../core/utils/api-error.js";
 import { ApiResponse } from "../../core/utils/api-response.js";
-import { StoreTransaction } from "../../models/StoreTransaction.model.js";
+import { StoreTransaction } from "../../models/store/StoreTransaction.model.js";
 import { storeTransactionSchema } from "../../shared/validators/store.validation.js";
-import { StoreOrders } from "../../models/StoreOrder.model.js";
+import { StoreOrders } from "../../models/store/StoreOrder.model.js";
 
 // CREATE TRANSACTION
 export const createTransaction = asyncHandler(async (req, res) => {

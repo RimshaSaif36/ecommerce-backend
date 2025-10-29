@@ -1,7 +1,7 @@
 import { asyncHandler } from "../../core/utils/async-handler.js";
 import { ApiError } from "../../core/utils/api-error.js";
 import { ApiResponse } from "../../core/utils/api-response.js";
-import { StoreProductReview } from "../../models/StoreProductReview.model.js";
+import { StoreProductReview } from "../../models/store/StoreProductReview.model.js";
 import { storeProductReviewValidation } from "../../shared/validators/store.validation.js";
 
 // CREATE REVIEW

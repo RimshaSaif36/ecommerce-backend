@@ -1,7 +1,7 @@
 import { asyncHandler } from "../../core/utils/async-handler.js";
 import { ApiError } from "../../core/utils/api-error.js";
 import { ApiResponse } from "../../core/utils/api-response.js";
-import { StoreFeedBack } from "../../models/StoreFeedback.model.js";
+import { StoreFeedBack } from "../../models/store/StoreFeedback.model.js";
 import { storeFeedbackValidation } from "../../shared/validators/store.validation.js";
 
 // CREATE
@@ -42,7 +42,7 @@ export const getFeedbackById = asyncHandler(async (req, res) => {
 
 // UPDATE (only owner can update)
 export const updateFeedback = asyncHandler(async (req, res) => {
-  const feedback = await StoreFeedBack.findById(req.params.id);
+  const feedback = await StoreFeedBack.findById(req.params._id);
   if (!feedback) throw new ApiError(404, "Feedback not found");
 
   if (feedback.userId.toString() !== req.user.id)

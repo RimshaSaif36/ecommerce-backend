@@ -37,5 +37,4 @@ const authorizeRoles = (...allowedRoles) => {
     next();
   };
 };
-
 export { authorizeRoles };

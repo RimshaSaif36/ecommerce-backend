@@ -109,7 +109,8 @@ export const updateStoreProductCategorySchema = z.object({
     .optional(),
 });
 
-// 🛍️ Store Product Validation
+
+// 🛍️ Store Product Validation (Fixed for Multer)
 export const storeProductSchema = z.object({
   productName: z
     .string({
@@ -130,22 +131,20 @@ export const storeProductSchema = z.object({
     .trim()
     .optional(), // Will hold ObjectId as string reference
 
-  price: z
-    .number({
+  price: z.preprocess((val) => Number(val), z.number({
       required_error: "Price is required",
       invalid_type_error: "Price must be a number",
     })
     .positive("Price must be greater than 0")
-    .max(9999999, "Price too large"),
+    .max(9999999, "Price too large")
+  ),
 
-  stock: z
-    .number({
+  stock: z.preprocess((val) => Number(val ?? 0), z.number({
       invalid_type_error: "Stock must be a number",
     })
     .int("Stock must be an integer")
     .min(0, "Stock cannot be negative")
-    .default(0)
-    .optional(),
+  ).optional(),
 
   productImage: z
     .string()
@@ -159,6 +158,7 @@ export const storeProductSchema = z.object({
     .optional()
     .default("pending"),
 });
+
 
 // 🛠️ Update Store Product Validation
 export const updateStoreProductSchema = z.object({

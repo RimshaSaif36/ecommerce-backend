@@ -9,10 +9,10 @@ import {
   updateFeedback,
   deleteFeedback,
 } from "./storeFeedback.controller.js";
-
+import { authorizeRoles } from "../../core/middleware/authorizeRoles.js";
 const storeFeedbackRouter = Router();
 
-storeFeedbackRouter.post("/",isLoggedIn,validate(storeFeedbackValidation),createFeedback);
+storeFeedbackRouter.post("/",isLoggedIn,authorizeRoles("buyer"),validate(storeFeedbackValidation),createFeedback);
 storeFeedbackRouter.get("/", getAllFeedbacks);
 storeFeedbackRouter.get("/:id", getFeedbackById);
 storeFeedbackRouter.put("/:id", validate(storeFeedbackValidation.partial()), updateFeedback);

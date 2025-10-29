@@ -6,7 +6,7 @@ const userSchema = new mongoose.Schema(
     {
         profileImage: {
             type: String,
-            default: 'https://placehold.co/600x400?text=User+Image',
+            default: '',
         },
         userName: {
             type: String,

@@ -8,11 +8,11 @@ import {
   updateReview,
   deleteReview,
 } from "./storeProductReview.controller.js";
-import { isLoggedIn } from "../../core/middleware/isLoggedin.js";
-
+import { isLoggedIn } from "../../core/middleware/isLoggedIn.js";
+import { authorizeRoles } from "../../core/middleware/authorizeRoles.js";
 const storeProductReviewRouter = Router();
 
-storeProductReviewRouter.post("/",isLoggedIn, validate(storeProductReviewValidation), createReview);
+storeProductReviewRouter.post("/",isLoggedIn,authorizeRoles("buyer"), validate(storeProductReviewValidation), createReview);
 storeProductReviewRouter.get("/", getAllReviews);
 storeProductReviewRouter.get("/:id", getReviewById);
 storeProductReviewRouter.put("/:id",isLoggedIn, validate(storeProductReviewValidation.partial()), updateReview);
