@@ -17,7 +17,6 @@ import {
 } from "./auth.controller.js";
 import { isLoggedIn } from "../../core/middleware/isLoggedIn.js";
 
-
 const authRouter = Router();
 
 // ✅ Register User (with optional profile image upload to AWS S3)
